@@ -1,0 +1,37 @@
+cmake_minimum_required(VERSION 3.10)
+project(TerraMorph)
+
+
+# Enable generation of compile commands database (for the vscode extension)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Set C++ standard to C++20
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "./bin")
+# Set compiler flags to ensure memory leaks are easy to find
+
+set(CMAKE_CXX_FLAGS "-g -fsanitize=address,undefined,alignment,bounds,pointer-overflow -fno-omit-frame-pointer")
+
+# Include paths
+include_directories("include")
+
+
+find_package(SDL2 REQUIRED)
+include_directories(${SDL2_INCLUDE_DIRS})
+
+
+# Source files
+file(GLOB SOURCE_FILES "src/*.cpp" "src/Core/*.cpp")
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+
+link_directories("lib")
+
+target_link_libraries(${PROJECT_NAME} "SDL2")
+
+find_library(COCOA Cocoa)
+find_library(OPENGL OpenGL)
+find_library(IOKIT IOKit)
+find_library(METAL Metal)
+find_library(QUARTZCORE QuartzCore)
+target_link_libraries(${PROJECT_NAME} ${COCOA} ${OPENGL} ${IOKIT} ${METAL} ${QUARTZCORE} ${SDL2_LIBRARIES})
+target_compile_definitions(${PROJECT_NAME} PUBLIC DEBUG=1)
