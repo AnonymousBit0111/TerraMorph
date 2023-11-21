@@ -20,12 +20,10 @@ Window::Window(const std::string &name, uint width, uint height)
 }
 
 void Window::subscribeToEvent(EventType event, EventHandler handler) {
-
   m_eventHandlers.emplace(std::make_pair(event, handler));
 }
 
 void Window::pollEvents() {
-
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT) {
