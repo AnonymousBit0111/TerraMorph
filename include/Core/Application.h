@@ -8,16 +8,16 @@ namespace Core {
 class Application {
 private:
   std::shared_ptr<Window> window = nullptr;
-  bool Open;
-  static void Quit(TerraMorph::Core::EventInfo info) {
+  bool open;
+  static void quit(TerraMorph::Core::EventInfo info) {
     SDL_Quit();
     exit(0);
   }
 
 public:
-  void Init();
-  void Run();
-  void Cleanup();
+  void init();
+  void run();
+  void cleanup();
 };
 
 } // namespace Core

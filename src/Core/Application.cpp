@@ -3,18 +3,19 @@
 #include <memory>
 
 using namespace TerraMorph::Core;
-void Application::Init() {
+void Application::init() {
 
   window = std::make_shared<Window>("TerraMorph", 400, 300);
-  Open = true;
+  open = true;
 
-  window->subscribeToEvent(TerraMorph::Core::EventType::Quit, Quit);
+  window->subscribeToEvent(TerraMorph::Core::EventType::Quit, quit);
 }
 
-void Application::Run() {
-  while (Application::Open) {
+void Application::run() {
+  while (Application::open) {
     window->pollEvents();
   }
 }
 
-void Application::Cleanup() { SDL_Quit(); }
+
+void Application::cleanup() { SDL_Quit(); }
