@@ -17,7 +17,6 @@ void Application::init() {
 
 void Application::initVulkan(){
   g_vkContext = std::make_shared<Graphics::VKContext>(window->getRawHandle());
-  
 }
 
 void Application::run() {

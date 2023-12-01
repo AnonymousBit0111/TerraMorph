@@ -55,6 +55,9 @@ struct VKContext {
 
 private:
   void createInstance();
+  void createSurface();
 };
+
+
 } // namespace Graphics
 } // namespace TerraMorph

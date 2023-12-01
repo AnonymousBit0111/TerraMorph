@@ -12,8 +12,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "./bin")
 
 set(CMAKE_CXX_FLAGS "-g -fsanitize=address,undefined,alignment,bounds,pointer-overflow -fno-omit-frame-pointer")
 
+
+find_package(Vulkan REQUIRED)
+
 # Include paths
-include_directories("include")
+include_directories("include" )
 
 
 find_package(SDL2 REQUIRED)
@@ -21,14 +24,15 @@ include_directories(${SDL2_INCLUDE_DIRS})
 
 
 # Source files
-file(GLOB SOURCE_FILES "src/*.cpp" "src/Core/*.cpp")
+file(GLOB SOURCE_FILES "src/*.cpp" "src/Core/*.cpp" "src/Graphics/*.cpp")
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 link_directories("lib")
 
-target_link_libraries(${PROJECT_NAME} "SDL2")
+target_link_libraries(${PROJECT_NAME} "SDL2" Vulkan::Vulkan)
 
 find_library(COCOA Cocoa)
+#TODO is this neccassary?
 find_library(OPENGL OpenGL)
 find_library(IOKIT IOKit)
 find_library(METAL Metal)

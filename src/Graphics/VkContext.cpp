@@ -1,9 +1,11 @@
 #include "Graphics/VkContext.h"
 #include "Core/Logging.h"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include <SDL_video.h>
 #include <SDL_vulkan.h>
+#include <cassert>
 
 using namespace TerraMorph::Graphics;
 using namespace TerraMorph::Core::Logging;
@@ -47,11 +49,15 @@ void VKContext::createInstance() {
       extensionCount == 0) {
     assert(false && "Failed to get the number of Vulkan instance extensions.");
   }
+  std::vector<const char *> extensions(extensionCount);
+
+  if (!SDL_Vulkan_GetInstanceExtensions(window, &extensionCount,
+                                        extensions.data())) {
+    assert(false && "Failed to get Vulkan instance extensions.");
+  }
 
   // this is needed for mac
   createInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
-
-  std::vector<const char *> extensions;
 
   extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
   extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -78,8 +84,20 @@ void VKContext::createInstance() {
 
   vk::resultCheck(res, "error:");
 
-  validationLayers = receivedLayers;
-
   Core::Logging::log("succesfully created instance");
 }
-VKContext::VKContext(SDL_Window *pwindow) : window(pwindow) { createInstance(); }
+
+void VKContext::createSurface() {
+
+  // Since SDL2 doesnt use vulkan.hpp , i will have to create a vk::SurfaceKHR
+  // from a VKSurfaceKHR
+  VkSurfaceKHR Csurf;
+  if (!SDL_Vulkan_CreateSurface(window, this->instance, &Csurf)) {
+    assert(false && "Failed to create Vulkan surface.");
+  }
+  surface = Csurf;
+}
+VKContext::VKContext(SDL_Window *pwindow) : window(pwindow) {
+  createInstance();
+  createSurface();
+}
