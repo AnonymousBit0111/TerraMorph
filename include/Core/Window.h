@@ -3,6 +3,7 @@
 #include "Core/Event.h"
 #include "EventHandlers.h"
 #include <SDL2/SDL.h>
+#include <SDL_video.h>
 #include <string>
 #include <sys/types.h>
 #include <unordered_map>
@@ -20,12 +21,11 @@ private:
 public:
   Window(const std::string &name, uint width, uint height);
 
+  SDL_Window *getRawHandle() const { return m_window; }
   void subscribeToEvent(EventType event, EventHandler handler);
-
   void pollEvents();
   ~Window();
 };
-
 
 } // namespace Core
 } // namespace TerraMorph
