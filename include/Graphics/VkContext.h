@@ -57,7 +57,10 @@ private:
   void createInstance();
   void createSurface();
   void pickPhysicalDevice();
+  void createLogicalDevice();
 };
+
+
 
 } // namespace Graphics
 } // namespace TerraMorph

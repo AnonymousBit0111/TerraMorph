@@ -98,18 +98,7 @@ void VKContext::createSurface() {
   }
   surface = Csurf;
 }
-VKContext::VKContext(SDL_Window *pwindow) : window(pwindow) {
-  createInstance();
-  createSurface();
-  pickPhysicalDevice();
-}
 
-// this will only be used once , so i won't declare it in a header file
-// if ever i need to consider other capabilities of a gpu , i will use this
-// struct
-struct GPU {
-  bool isDiscrete;
-};
 void VKContext::pickPhysicalDevice() {
   std::vector<vk::PhysicalDevice> physicalDevices =
       instance.enumeratePhysicalDevices();
@@ -129,4 +118,81 @@ void VKContext::pickPhysicalDevice() {
   }
   this->physicalDevice = currentDevice;
   log("found usable GPU");
+}
+
+void VKContext::createLogicalDevice() {
+
+  std::vector<vk::QueueFamilyProperties> queueFamilies =
+      this->physicalDevice.getQueueFamilyProperties();
+
+  uint32_t i = 0;
+  for (const auto &queueFamily : queueFamilies) {
+    if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
+      this->queueFamilyIndices["Graphics"] = i;
+    }
+    bool presentSupport;
+    presentSupport = this->physicalDevice.getSurfaceSupportKHR(i, surface);
+    if (presentSupport) {
+      this->queueFamilyIndices["Present"] = i;
+    }
+    i++;
+  }
+
+  if (this->queueFamilyIndices.count("Graphics") < 0) {
+    error("failed to find Graphics Queue");
+  }
+
+  vk::DeviceQueueCreateInfo queueCreateInfo{};
+  queueCreateInfo.queueFamilyIndex =
+      this->queueFamilyIndices["Graphics"].value();
+  queueCreateInfo.queueCount = 1;
+  static float queuePriority = 1.0f;
+  queueCreateInfo.pQueuePriorities = &queuePriority;
+
+  vk::PhysicalDeviceFeatures deviceFeatures{};
+
+  std::vector<vk::ExtensionProperties> availableExtensions =
+      this->physicalDevice.enumerateDeviceExtensionProperties();
+
+  std::vector<const char *> enabledExtensions = {
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset"};
+
+  for (auto &req : enabledExtensions) {
+    bool extFound = false;
+    for (auto &i : this->physicalDevice.enumerateDeviceExtensionProperties()) {
+
+      if (std::string(i.extensionName) == std::string(req)) {
+        log("device extension " + std::string(i.extensionName) +
+            " is enabled and supported");
+        extFound = true;
+        break;
+      }
+    }
+    if (!extFound) {
+      warn("device extension " + std::string(req) + " not found");
+    }
+  }
+
+  vk::DeviceCreateInfo createInfo{};
+  createInfo.enabledExtensionCount =
+      static_cast<uint32_t>(enabledExtensions.size());
+  createInfo.ppEnabledExtensionNames = enabledExtensions.data();
+  createInfo.queueCreateInfoCount = 1;
+  createInfo.pQueueCreateInfos = &queueCreateInfo;
+  createInfo.pEnabledFeatures = &deviceFeatures;
+
+  this->device = this->physicalDevice.createDevice(createInfo);
+
+  this->graphicsQueue =
+      this->device.getQueue(this->queueFamilyIndices["Graphics"].value(), 0);
+  this->presentQueue =
+      this->device.getQueue(this->queueFamilyIndices["Present"].value(), 0);
+  log("succesfully created logical device");
+}
+
+VKContext::VKContext(SDL_Window *pwindow) : window(pwindow) {
+  createInstance();
+  createSurface();
+  pickPhysicalDevice();
+  createLogicalDevice();
 }
