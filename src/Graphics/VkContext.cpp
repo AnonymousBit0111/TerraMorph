@@ -2,6 +2,7 @@
 #include "Core/Logging.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include <SDL_video.h>
 #include <SDL_vulkan.h>
@@ -100,4 +101,32 @@ void VKContext::createSurface() {
 VKContext::VKContext(SDL_Window *pwindow) : window(pwindow) {
   createInstance();
   createSurface();
+  pickPhysicalDevice();
+}
+
+// this will only be used once , so i won't declare it in a header file
+// if ever i need to consider other capabilities of a gpu , i will use this
+// struct
+struct GPU {
+  bool isDiscrete;
+};
+void VKContext::pickPhysicalDevice() {
+  std::vector<vk::PhysicalDevice> physicalDevices =
+      instance.enumeratePhysicalDevices();
+
+  vk::PhysicalDevice currentDevice = physicalDevices[0];
+
+  for (auto &i : physicalDevices) {
+    vk::PhysicalDeviceProperties props = i.getProperties();
+    vk::PhysicalDeviceFeatures features = i.getFeatures();
+
+    // this will just pick the last discrete gpu on the list , it shouldnt be an
+    // issue though since very few computers have many gpus, i will ammend when
+    // neccessary to save time
+    if (props.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
+      currentDevice = i;
+    }
+  }
+  this->physicalDevice = currentDevice;
+  log("found usable GPU");
 }
