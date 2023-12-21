@@ -196,3 +196,12 @@ VKContext::VKContext(SDL_Window *pwindow) : window(pwindow) {
   pickPhysicalDevice();
   createLogicalDevice();
 }
+
+VKContext::~VKContext() {
+}
+
+void VKContext::destroy() {
+  device.destroy();
+  instance.destroySurfaceKHR(surface);
+  instance.destroy();
+}

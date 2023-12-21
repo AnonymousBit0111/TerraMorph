@@ -1,9 +1,14 @@
 #include "Core/Application.h"
+#include "Core/Globals.h"
 #include "Core/Window.h"
 #include "Graphics/VkContext.h"
 #include <memory>
 
+
 using namespace TerraMorph::Core;
+
+std::shared_ptr<Window> Application::window = nullptr;
+bool Application::open = false;
 void Application::init() {
 
   window = std::make_shared<Window>("TerraMorph", 400, 300);
@@ -11,11 +16,9 @@ void Application::init() {
 
   window->subscribeToEvent(TerraMorph::Core::EventType::Quit, quit);
 
-
   initVulkan();
 }
-
-void Application::initVulkan(){
+void Application::initVulkan() {
   g_vkContext = std::make_shared<Graphics::VKContext>(window->getRawHandle());
 }
 
@@ -24,6 +27,7 @@ void Application::run() {
     window->pollEvents();
   }
 }
-
-
-void Application::cleanup() { SDL_Quit(); }
+void Application::cleanup() {
+  g_vkContext->destroy();
+  SDL_Quit();
+}

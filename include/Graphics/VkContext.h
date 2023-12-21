@@ -24,34 +24,9 @@ struct VKContext {
   bool destroyed = false;
 
   VKContext(SDL_Window *window);
-
-  void destroy() {
-    if (!destroyed) {
-      device.destroySemaphore(RenderFinished);
-      device.destroySemaphore(ImageAvailable);
-      device.destroyFence(inFlightFence);
-      device.destroy();
-      instance.destroySurfaceKHR(surface);
-      instance.destroy();
-
-      destroyed = true;
-    }
-  }
-
   // Destructor
-  ~VKContext() {
-    // Cleanup code for the Vulkan resources
-    if (!destroyed) {
-      device.destroySemaphore(RenderFinished);
-      device.destroySemaphore(ImageAvailable);
-      device.destroyFence(inFlightFence);
-      device.destroy();
-      instance.destroySurfaceKHR(surface);
-      instance.destroy();
-
-      destroyed = true;
-    }
-  }
+  ~VKContext();
+  void destroy();
 
 private:
   void createInstance();
@@ -59,7 +34,6 @@ private:
   void pickPhysicalDevice();
   void createLogicalDevice();
 };
-
 
 
 } // namespace Graphics
