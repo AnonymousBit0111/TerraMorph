@@ -33,6 +33,7 @@
 
 #build system artefacts
 bin/TerraMorph
+build
 CMakeFiles
 cmake_install.cmake
 CmakeCache.txt
