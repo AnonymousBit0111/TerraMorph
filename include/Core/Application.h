@@ -1,26 +1,27 @@
 #pragma once
 
 #include "Core/Window.h"
+#include "Graphics/Renderer.h"
 #include "Graphics/VkContext.h"
 #include <SDL.h>
 #include <memory>
 namespace TerraMorph {
 namespace Core {
 class Application {
-private:
-  std::shared_ptr<Window> window = nullptr;
-  std::shared_ptr<Graphics::VKContext> g_vkContext = nullptr;
-  bool open;
+public:
+  static std::shared_ptr<Window> window;
+  static std::shared_ptr<Graphics::Renderer> renderer;
+  static bool open;
+
+
+  static void init();
+  static void initVulkan();
+  static void run();
+  static void cleanup();
   static void quit(TerraMorph::Core::EventInfo info) {
-    SDL_Quit();
+    cleanup();
     exit(0);
   }
-
-public:
-  void init();
-  void initVulkan();
-  void run();
-  void cleanup();
 };
 
 } // namespace Core
