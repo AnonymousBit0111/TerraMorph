@@ -16,11 +16,14 @@ private:
 
   std::vector<vk::ImageView> m_imageViews;
   std::vector<vk::Image> m_images;
+  std::vector<vk::Framebuffer> m_framebuffers;
 
   vk::SwapchainKHR m_handle;
 
 public:
   Swapchain(SDL_Window *window);
+  vk::Format getImageFormat()const {return m_imageFormat;}
+  void createFrameBuffers(vk::RenderPass renderpass);
   ~Swapchain();
 };
 

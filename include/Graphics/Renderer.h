@@ -1,17 +1,16 @@
 #pragma once
 
+#include "Graphics/RenderPass.h"
 #include "Graphics/Swapchain.h"
 #include <SDL_video.h>
+#include <memory>
 namespace TerraMorph {
 namespace Graphics {
 class Renderer {
 
 private:
-
-std::shared_ptr<Swapchain> m_swapChain;
-
-
-
+  std::unique_ptr<Swapchain> m_swapChain;
+  std::unique_ptr<RenderPass> m_renderPass;
 
 public:
   Renderer(SDL_Window *win);

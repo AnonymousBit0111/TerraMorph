@@ -1,5 +1,6 @@
 #include "Graphics/Swapchain.h"
 #include "Core/Globals.h"
+#include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include <SDL_video.h>
 
@@ -133,7 +134,31 @@ Swapchain::Swapchain(SDL_Window *win) {
   }
 }
 
+void Swapchain::createFrameBuffers(vk::RenderPass rp) {
+
+  m_framebuffers.resize(m_imageViews.size());
+
+  for (size_t i = 0; i < m_imageViews.size(); i++) {
+    vk::ImageView attachments[] = {m_imageViews[i]};
+    vk::FramebufferCreateInfo frameBufferInfo{};
+    frameBufferInfo.renderPass = rp;
+    frameBufferInfo.attachmentCount = 1;
+    frameBufferInfo.pAttachments = attachments;
+    frameBufferInfo.width = m_extent.width;
+    frameBufferInfo.height = m_extent.height;
+    frameBufferInfo.layers = 1;
+    vk::resultCheck(g_vkContext->device.createFramebuffer(
+                        &frameBufferInfo, nullptr, &m_framebuffers[i]),
+                    "");
+  }
+}
+
 Swapchain::~Swapchain() {
+
+    // NOTE , this could potentially be done all in one loop
+  for (auto &i : m_framebuffers) {
+    g_vkContext->device.destroyFramebuffer(i);
+  }
 
   for (auto &i : m_imageViews) {
     g_vkContext->device.destroyImageView(i);
