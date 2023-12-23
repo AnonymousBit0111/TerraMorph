@@ -14,9 +14,6 @@ struct VKContext {
   vk::PhysicalDevice physicalDevice;
   vk::Queue graphicsQueue;
   vk::Queue presentQueue;
-  vk::Fence inFlightFence;
-  vk::Semaphore ImageAvailable;
-  vk::Semaphore RenderFinished;
   std::map<std::string, std::optional<uint32_t>> queueFamilyIndices;
   std::vector<const char *> validationLayers;
   SDL_Window *window;
@@ -34,7 +31,6 @@ private:
   void pickPhysicalDevice();
   void createLogicalDevice();
 };
-
 
 } // namespace Graphics
 } // namespace TerraMorph
