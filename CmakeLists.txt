@@ -15,12 +15,17 @@ set(CMAKE_CXX_FLAGS "-g -fsanitize=address,undefined,alignment,bounds,pointer-ov
 
 find_package(Vulkan REQUIRED)
 
-# Include paths
-include_directories("include" )
 
 
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
+
+
+
+add_subdirectory("lib/glm")
+
+
+include_directories("include" glm)
 
 
 # Source files
@@ -29,7 +34,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 link_directories("lib")
 
-target_link_libraries(${PROJECT_NAME} "SDL2" Vulkan::Vulkan)
+# target_link_libraries(${PROJECT_NAME} "SDL2"  )
 
 find_library(COCOA Cocoa)
 #TODO is this neccassary?
@@ -37,5 +42,6 @@ find_library(OPENGL OpenGL)
 find_library(IOKIT IOKit)
 find_library(METAL Metal)
 find_library(QUARTZCORE QuartzCore)
-target_link_libraries(${PROJECT_NAME} ${COCOA} ${OPENGL} ${IOKIT} ${METAL} ${QUARTZCORE} ${SDL2_LIBRARIES})
+
+target_link_libraries(${PROJECT_NAME} ${COCOA} ${OPENGL} ${IOKIT} ${METAL} ${QUARTZCORE} ${SDL2_LIBRARIES} Vulkan::Vulkan glm::glm)
 target_compile_definitions(${PROJECT_NAME} PUBLIC DEBUG=1)

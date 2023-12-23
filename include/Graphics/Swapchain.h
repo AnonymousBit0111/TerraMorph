@@ -22,7 +22,8 @@ private:
 
 public:
   Swapchain(SDL_Window *window);
-  vk::Format getImageFormat()const {return m_imageFormat;}
+  vk::Format getImageFormat() const { return m_imageFormat; }
+  vk::Extent2D getExtent() const { return m_extent; }
   void createFrameBuffers(vk::RenderPass renderpass);
   ~Swapchain();
 };
