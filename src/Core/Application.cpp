@@ -28,6 +28,9 @@ void Application::initVulkan() {
 void Application::run() {
   while (Application::open) {
     window->pollEvents();
+
+    renderer->beginFrame();
+    renderer->drawFrame();
   }
 }
 void Application::cleanup() {

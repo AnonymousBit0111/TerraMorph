@@ -15,7 +15,7 @@ public:
   Pipeline(const std::string &fsPath, const std::string &vsPath,
            vk::RenderPass rp, vk::PipelineLayout layout,
            vk::Extent2D viewportSize);
-  vk::Pipeline getHandle();
+  vk::Pipeline getHandle()const {return m_handle;}
 
   ~Pipeline();
 };

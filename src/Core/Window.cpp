@@ -2,6 +2,7 @@
 #include "Core/Event.h"
 #include "Core/EventHandlers.h"
 #include "Core/Logging.h"
+#include "imgui_impl_sdl2.h"
 #include <SDL_events.h>
 #include <SDL_video.h>
 #include <iostream>
@@ -27,6 +28,8 @@ void Window::subscribeToEvent(EventType event, EventHandler handler) {
 void Window::pollEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
+
+    ImGui_ImplSDL2_ProcessEvent(&event);
 
     // TODO , make this work for every event
     if (event.type == SDL_QUIT) {

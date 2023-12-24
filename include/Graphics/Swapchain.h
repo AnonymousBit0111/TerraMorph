@@ -25,6 +25,12 @@ public:
   vk::Format getImageFormat() const { return m_imageFormat; }
   vk::Extent2D getExtent() const { return m_extent; }
   void createFrameBuffers(vk::RenderPass renderpass);
+  vk::Framebuffer getFramebuffer(int index) const {
+    return m_framebuffers[index];
+  };
+  vk::SwapchainKHR getHandle() const { return m_handle; }
+
+  int getImageCount() const { return m_images.size(); }
   ~Swapchain();
 };
 

@@ -22,10 +22,22 @@ private:
   vk::Semaphore m_imageAvailable;
   vk::Fence m_frameInflight;
 
+  vk::CommandPool m_commandPool;
+  vk::CommandBuffer m_commandBuffer;
+
+  vk::DescriptorPool imGuiDescriptorPool;
+
+  SDL_Window *p_window;
+
+  void initImGui();
+
 public:
   Renderer(SDL_Window *win);
   void beginFrame();
+  void drawFrame();
+  void recordCommandBuffer(int imageIndex);
   ~Renderer();
 };
+
 } // namespace Graphics
 } // namespace TerraMorph
