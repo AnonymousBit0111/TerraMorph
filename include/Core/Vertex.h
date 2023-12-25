@@ -5,7 +5,8 @@ namespace TerraMorph {
 namespace Core {
 
 struct PosColourVertex {
-  float x, y, z, r, g, b, a;
+  glm::vec3 pos;
+  glm::vec4 colour;
 };
 
 struct PushConstant {

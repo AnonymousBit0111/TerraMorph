@@ -5,6 +5,8 @@
 #include "Graphics/PipelineLayout.h"
 #include "Graphics/RenderPass.h"
 #include "Graphics/Swapchain.h"
+#include "Graphics/VertexBuffer.h"
+#include "glm/fwd.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_vulkan.h"
@@ -62,7 +64,6 @@ void Renderer::initImGui() {
   ImGui_ImplVulkan_Init(&initInfo, m_renderPass->getHandle());
 
   ImGui::StyleColorsDark();
-
 }
 
 Renderer::Renderer(SDL_Window *window) : p_window(window) {
@@ -116,6 +117,28 @@ Renderer::Renderer(SDL_Window *window) : p_window(window) {
          vk::Result::eSuccess);
 
   initImGui();
+
+  testVertices.push_back(
+      {glm::vec3(-1.0, 1.0, 0.0), glm::vec4(1,0,0, 1)}); // top left
+  testVertices.push_back(
+      {glm::vec3(1.0, 1.0, 0.0), glm::vec4(0, 0, 1, 1)}); // top right
+  testVertices.push_back(
+      {glm::vec3(1.0, -1.0, 0.0), glm::vec4(0, 1, 0, 1)}); // bottom right
+  testVertices.push_back(
+      {glm::vec3(-1.0, -1.0, 0.0), glm::vec4(1, 1, 1, 1)}); // bottom left
+
+  for (auto &i : testVertices) {
+    i.pos.x *= 0.5;
+    i.pos.y *= 0.5;
+  }
+  m_vertexBuffer = std::make_unique<VertexBuffer>(sizeof(PosColourVertex) * 4);
+  m_vertexBuffer->update(testVertices);
+
+  m_indexBuffer = std::make_unique<IndexBuffer>(6 * sizeof(glm::uint32_t));
+
+  testIndices = {0, 3, 1, 3, 2, 1};
+
+  m_indexBuffer->update(testIndices);
 }
 
 void Renderer::beginFrame() {
@@ -139,7 +162,8 @@ void Renderer::recordCommandBuffer(int imageIndex) {
   vk::CommandBufferBeginInfo beginInfo{};
   vk::ClearValue clearValue{};
 
-  clearValue.color = {1.0f, 1.0f, 1.0f, 1.0f}; // all white for testing
+  clearValue.color = {173 / 255.0f, 216 / 255.0f, 230 / 255.0f,
+                      1.0f}; // light blue
 
   result = m_commandBuffer.begin(&beginInfo);
   assert(result == vk::Result::eSuccess);
@@ -168,11 +192,13 @@ void Renderer::recordCommandBuffer(int imageIndex) {
                                 vk::ShaderStageFlagBits::eVertex, 0,
                                 sizeof(pushconstants), &pushconstants);
 
-  // Do drawing operations with vertex and index buffers here
+  vk::DeviceSize offsets = {0};
+  auto vbuffer = m_vertexBuffer->getHandle();
+  m_commandBuffer.bindVertexBuffers(0, 1, &vbuffer, &offsets);
+  m_commandBuffer.bindIndexBuffer(m_indexBuffer->getHandle(), 0,
+                                  vk::IndexType::eUint32);
+  m_commandBuffer.drawIndexed(6, 1, 0, 0, 0);
 
-  // Do imgui operations here
-
-  ImGui::ShowDebugLogWindow();
   ImGui::Render();
   auto draw_data = ImGui::GetDrawData();
 
@@ -251,7 +277,6 @@ Renderer::~Renderer() {
   ImGui::DestroyContext();
 
   g_vkContext->device.destroyCommandPool(m_commandPool);
-
   g_vkContext->device.destroySemaphore(m_imageAvailable);
   g_vkContext->device.destroySemaphore(m_renderFinished);
   g_vkContext->device.destroyFence(m_frameInflight);

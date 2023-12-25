@@ -3,6 +3,7 @@
 #include "Core/Window.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/VkContext.h"
+#include "imgui.h"
 #include <memory>
 
 using namespace TerraMorph::Core;
@@ -13,7 +14,7 @@ std::shared_ptr<Renderer> Application::renderer = nullptr;
 bool Application::open = false;
 void Application::init() {
 
-  window = std::make_shared<Window>("TerraMorph", 400, 300);
+  window = std::make_shared<Window>("TerraMorph", 1080, 720);
   open = true;
 
   window->subscribeToEvent(TerraMorph::Core::EventType::Quit, quit);
@@ -30,6 +31,10 @@ void Application::run() {
     window->pollEvents();
 
     renderer->beginFrame();
+
+    // Any ImGui call should go here
+
+    ImGui::ShowDemoWindow();
     renderer->drawFrame();
   }
 }

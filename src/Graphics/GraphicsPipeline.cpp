@@ -35,13 +35,13 @@ std::vector<vk::VertexInputAttributeDescription> getAttributeDescriptions() {
   Pos.binding = 0;
   Pos.location = 0;
   Pos.format = vk::Format::eR32G32B32Sfloat; // x,y,z
-  Pos.offset = offsetof(PosColourVertex, x);
+  Pos.offset = offsetof(PosColourVertex, pos);
 
   vk::VertexInputAttributeDescription Colour{};
   Colour.binding = 0;
   Colour.location = 1;
   Colour.format = vk::Format::eR32G32B32A32Sfloat; // r,g,b,a
-  Colour.offset = offsetof(PosColourVertex, r);
+  Colour.offset = offsetof(PosColourVertex, colour);
 
   return {Pos, Colour};
 }

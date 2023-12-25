@@ -1,4 +1,5 @@
 #pragma once
+#include "glm/fwd.hpp"
 #include <SDL.h>
 #include <map>
 #include <memory>
@@ -24,6 +25,8 @@ struct VKContext {
   // Destructor
   ~VKContext();
   void destroy();
+  static glm::uint32_t findMemoryType(uint32_t typeFilter,
+                                      vk::MemoryPropertyFlags properties);
 
 private:
   void createInstance();

@@ -15,6 +15,7 @@ layout( push_constant ) uniform constants
 
 void main() {
 
-    gl_Position = PushConstants.render_matrix  *vec4(inPosition.x,inPosition.y, inPosition.z, 1.0);
+    gl_Position = vec4(inPosition.x,inPosition.y, inPosition.z, 1.0);
+    // gl_Position = PushConstants.render_matrix  *vec4(inPosition.x,inPosition.y, inPosition.z, 1.0);
     fragColor = inColor;
 }

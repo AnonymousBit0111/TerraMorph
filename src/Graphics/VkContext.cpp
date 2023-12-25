@@ -1,5 +1,6 @@
 #include "Graphics/VkContext.h"
 #include "Core/Logging.h"
+#include "glm/fwd.hpp"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
@@ -7,6 +8,8 @@
 #include <SDL_video.h>
 #include <SDL_vulkan.h>
 #include <cassert>
+
+#include "Core/Globals.h"
 
 using namespace TerraMorph::Graphics;
 using namespace TerraMorph::Core::Logging;
@@ -197,11 +200,30 @@ VKContext::VKContext(SDL_Window *pwindow) : window(pwindow) {
   createLogicalDevice();
 }
 
-VKContext::~VKContext() {
-}
+VKContext::~VKContext() {}
 
 void VKContext::destroy() {
   device.destroy();
   instance.destroySurfaceKHR(surface);
   instance.destroy();
+}
+
+glm::uint32_t VKContext::findMemoryType(uint32_t typeFilter,
+                                        vk::MemoryPropertyFlags properties) {
+  vk::PhysicalDeviceMemoryProperties memProps{};
+
+  Core::g_vkContext->physicalDevice.getMemoryProperties(&memProps);
+
+  for (unsigned int i = 0; i < memProps.memoryTypeCount; i++) {
+    if ((typeFilter & (1 << i)) &&
+        (memProps.memoryTypes[i].propertyFlags & properties) == properties) {
+      return i;
+    }
+  }
+  Core::Logging::error("Unable to find suitable memory type");
+
+
+  
+  return -1; // code will never reach this point, this is just to make the
+             // compiler happy
 }
