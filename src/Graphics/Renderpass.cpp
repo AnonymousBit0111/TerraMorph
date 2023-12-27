@@ -23,6 +23,7 @@ RenderPass::RenderPass(vk::Format imageFormat) {
   subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
   subpass.colorAttachmentCount = 1;
   subpass.pColorAttachments = &colorAttachmentRef;
+  
 
   Info.attachmentCount = 1;
   Info.pAttachments = &colourAttachment;

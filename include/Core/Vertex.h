@@ -10,7 +10,7 @@ struct PosColourVertex {
 };
 
 struct PushConstant {
-  glm::vec4 data;
+  glm::mat4 rotationData;
   glm::mat4 viewproj;
 };
 } // namespace Core

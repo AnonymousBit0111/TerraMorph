@@ -1,5 +1,6 @@
 #include "Graphics/Swapchain.h"
 #include "Core/Globals.h"
+#include "Graphics/VkContext.h"
 #include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include <SDL_video.h>
@@ -106,6 +107,11 @@ Swapchain::Swapchain(SDL_Window *win) {
   m_images = g_vkContext->device.getSwapchainImagesKHR(m_handle);
 
   m_imageViews.resize(m_images.size());
+  m_depthImageViews.resize(m_images.size());
+
+  m_depthImages.resize(m_images.size());
+
+  m_depthImageMemory.resize((m_images.size()));
 
   int index = 0;
   for (auto &i : m_images) {
@@ -130,6 +136,54 @@ Swapchain::Swapchain(SDL_Window *win) {
     if (res != vk::Result::eSuccess) {
       assert(false);
     }
+
+    vk::ImageViewCreateInfo DepthInfo{};
+    DepthInfo.image = i;
+    info.viewType = vk::ImageViewType::e2D;
+    info.format = vk::Format::eD32Sfloat;
+    info.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
+    info.subresourceRange.levelCount = 1;
+    info.subresourceRange.layerCount = 1;
+
+    vk::ImageCreateInfo imageInfo{};
+    imageInfo.imageType = vk::ImageType::e2D;
+    imageInfo.format = vk::Format::eD32Sfloat;
+    imageInfo.extent.width = m_extent.width;
+    imageInfo.extent.height = m_extent.height;
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.samples = vk::SampleCountFlagBits::e1;
+    imageInfo.tiling = vk::ImageTiling::eOptimal;
+    imageInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
+
+    m_depthImages[index] = g_vkContext->device.createImage(imageInfo);
+    vk::MemoryRequirements memoryRequirements =
+        g_vkContext->device.getImageMemoryRequirements(m_depthImages[index]);
+
+    vk::MemoryAllocateInfo allocInfo{};
+    allocInfo.allocationSize = memoryRequirements.size;
+    allocInfo.memoryTypeIndex =
+        VKContext::findMemoryType(memoryRequirements.memoryTypeBits,
+                                  vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+    m_depthImageMemory[index] = g_vkContext->device.allocateMemory(allocInfo);
+
+    g_vkContext->device.bindImageMemory(m_depthImages[index],
+                                        m_depthImageMemory[index], 0);
+
+    vk::ImageViewCreateInfo viewInfo{};
+    viewInfo.image = m_depthImages[index];
+    viewInfo.viewType = vk::ImageViewType::e2D;
+    viewInfo.format = vk::Format::eD32Sfloat;
+    viewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    m_depthImageViews[index] = g_vkContext->device.createImageView(viewInfo);
+
     index++;
   }
 }
@@ -139,10 +193,11 @@ void Swapchain::createFrameBuffers(vk::RenderPass rp) {
   m_framebuffers.resize(m_imageViews.size());
 
   for (size_t i = 0; i < m_imageViews.size(); i++) {
-    vk::ImageView attachments[] = {m_imageViews[i]};
+    vk::ImageView attachments[] = {m_imageViews[i], m_depthImageViews[i]};
     vk::FramebufferCreateInfo frameBufferInfo{};
     frameBufferInfo.renderPass = rp;
-    frameBufferInfo.attachmentCount = 1;
+    frameBufferInfo.attachmentCount =
+        1; // i know the depth image wont be used , this is for testing
     frameBufferInfo.pAttachments = attachments;
     frameBufferInfo.width = m_extent.width;
     frameBufferInfo.height = m_extent.height;
@@ -155,13 +210,25 @@ void Swapchain::createFrameBuffers(vk::RenderPass rp) {
 
 Swapchain::~Swapchain() {
 
-    // NOTE , this could potentially be done all in one loop
+  // NOTE , this could potentially be done all in one loop
   for (auto &i : m_framebuffers) {
     g_vkContext->device.destroyFramebuffer(i);
   }
 
   for (auto &i : m_imageViews) {
     g_vkContext->device.destroyImageView(i);
+  }
+
+  for (auto &i : m_depthImageViews) {
+    g_vkContext->device.destroyImageView(i);
+  }
+
+  for (auto &i : m_depthImages) {
+    g_vkContext->device.destroyImage(i);
+  }
+
+  for (auto &i : m_depthImageMemory) {
+    g_vkContext->device.freeMemory(i);
   }
 
   g_vkContext->device.destroySwapchainKHR(m_handle);

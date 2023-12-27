@@ -1,17 +1,21 @@
 #include "Graphics/Renderer.h"
 #include "Core/Globals.h"
 #include "Core/Vertex.h"
+#include "Graphics/Camera.h"
 #include "Graphics/GraphicsPipeline.h"
 #include "Graphics/PipelineLayout.h"
 #include "Graphics/RenderPass.h"
 #include "Graphics/Swapchain.h"
 #include "Graphics/VertexBuffer.h"
+#include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_vulkan.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_structs.hpp"
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -66,7 +70,8 @@ void Renderer::initImGui() {
   ImGui::StyleColorsDark();
 }
 
-Renderer::Renderer(SDL_Window *window) : p_window(window) {
+Renderer::Renderer(SDL_Window *window, Camera *cam)
+    : p_window(window), camera(cam) {
   m_swapChain = std::make_unique<Swapchain>(window);
   m_renderPass = std::make_unique<RenderPass>(m_swapChain->getImageFormat());
   m_swapChain->createFrameBuffers(m_renderPass->getHandle());
@@ -74,6 +79,8 @@ Renderer::Renderer(SDL_Window *window) : p_window(window) {
   vk::PushConstantRange pushConstantRange{
 
   };
+
+  rotation = glm::mat4(1); // dont know why this is needed
   pushConstantRange.offset = 0;
 
   pushConstantRange.size = sizeof(Core::PushConstant);
@@ -118,25 +125,61 @@ Renderer::Renderer(SDL_Window *window) : p_window(window) {
 
   initImGui();
 
-  testVertices.push_back(
-      {glm::vec3(-1.0, 1.0, 0.0), glm::vec4(1,0,0, 1)}); // top left
-  testVertices.push_back(
-      {glm::vec3(1.0, 1.0, 0.0), glm::vec4(0, 0, 1, 1)}); // top right
-  testVertices.push_back(
-      {glm::vec3(1.0, -1.0, 0.0), glm::vec4(0, 1, 0, 1)}); // bottom right
-  testVertices.push_back(
-      {glm::vec3(-1.0, -1.0, 0.0), glm::vec4(1, 1, 1, 1)}); // bottom left
+  testVertices = {{
+      // Front face
+      {glm::vec3{-1.0, -1.0, 1.0},
+       glm::vec4{1.0, 0.0, 0.0, 1.0f}}, // bottom-left
+      {glm::vec3{1.0, -1.0, 1.0},
+       glm::vec4{1.0, 1.0, 0.0, 1.0f}},                         // bottom-right
+      {glm::vec3{1.0, 1.0, 1.0}, glm::vec4{1.0, 0.0, 0.0, 1}},  // top-right
+      {glm::vec3{-1.0, 1.0, 1.0}, glm::vec4{1.0, 0.0, 0.0, 1}}, // top-left
 
-  for (auto &i : testVertices) {
-    i.pos.x *= 0.5;
-    i.pos.y *= 0.5;
-  }
-  m_vertexBuffer = std::make_unique<VertexBuffer>(sizeof(PosColourVertex) * 4);
+      // Back face
+      {glm::vec3{1.0, -1.0, -1.0}, glm::vec4{0.0, 1.0, 0.0, 1}}, // bottom-left
+      {glm::vec3{-1.0, -1.0, -1.0},
+       glm::vec4{0.0, 1.0, 0.0, 1}},                             // bottom-right
+      {glm::vec3{-1.0, 1.0, -1.0}, glm::vec4{0.0, 1.0, 0.0, 1}}, // top-right
+      {glm::vec3{1.0, 1.0, -1.0}, glm::vec4{0.0, 1.0, 1.0, 1}},  // top-left
+
+      // Left face
+      {glm::vec3{-1.0, -1.0, -1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}, // bottom-left
+      {glm::vec3{-1.0, -1.0, 1.0}, glm::vec4{0.0, 0.0, 1.0, 1}}, // bottom-right
+      {glm::vec3{-1.0, 1.0, 1.0}, glm::vec4{0.0, 0.0, 1.0, 1}},  // top-right
+      {glm::vec3{-1.0, 1.0, -1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}, // top-left
+
+      // Right face
+      {glm::vec3{1.0, -1.0, 1.0}, glm::vec4{1.0, 1.0, 0.0, 1}},  // bottom-left
+      {glm::vec3{1.0, -1.0, -1.0}, glm::vec4{1.0, 1.0, 0.0, 1}}, // bottom-right
+      {glm::vec3{1.0, 1.0, -1.0}, glm::vec4{1.0, 1.0, 0.0, 1}},  // top-right
+      {glm::vec3{1.0, 1.0, 1.0}, glm::vec4{1.0, 1.0, 0.0, 1}},   // top-left
+
+      // Top face
+      {glm::vec3{-1.0, 1.0, 1.0}, glm::vec4{0.0, 1.0, 1.0, 1}},  // bottom-left
+      {glm::vec3{1.0, 1.0, 1.0}, glm::vec4{0.0, 1.0, 1.0, 1}},   // bottom-right
+      {glm::vec3{1.0, 1.0, -1.0}, glm::vec4{0.0, 1.0, 1.0, 1}},  // top-right
+      {glm::vec3{-1.0, 1.0, -1.0}, glm::vec4{0.0, 1.0, 1.0, 1}}, // top-left
+
+      // Bottom face
+      {glm::vec3{-1.0, -1.0, -1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}, // bottom-left
+      {glm::vec3{1.0, -1.0, -1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}, // bottom-right
+      {glm::vec3{1.0, -1.0, 1.0}, glm::vec4{1.0, 0.0, 1.0, 1}},  // top-right
+      {glm::vec3{-1.0, -1.0, 1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}  // top-left
+  }};
+
+  m_vertexBuffer = std::make_unique<VertexBuffer>(sizeof(PosColourVertex) *
+                                                  testVertices.size());
   m_vertexBuffer->update(testVertices);
 
-  m_indexBuffer = std::make_unique<IndexBuffer>(6 * sizeof(glm::uint32_t));
-
-  testIndices = {0, 3, 1, 3, 2, 1};
+  testIndices = {
+      0,  1,  2,  2,  3,  0,  // Front face
+      4,  5,  6,  6,  7,  4,  // Back face
+      8,  9,  10, 10, 11, 8,  // Left face
+      12, 13, 14, 14, 15, 12, // Right face
+      16, 17, 18, 18, 19, 16, // Top face
+      20, 21, 22, 22, 23, 20  // Bottom face
+  };
+  m_indexBuffer =
+      std::make_unique<IndexBuffer>(testIndices.size() * sizeof(glm::uint32_t));
 
   m_indexBuffer->update(testIndices);
 }
@@ -160,10 +203,15 @@ void Renderer::beginFrame() {
 void Renderer::recordCommandBuffer(int imageIndex) {
   vk::Result result;
   vk::CommandBufferBeginInfo beginInfo{};
-  vk::ClearValue clearValue{};
+  vk::ClearValue clearcolourValue{};
 
-  clearValue.color = {173 / 255.0f, 216 / 255.0f, 230 / 255.0f,
-                      1.0f}; // light blue
+  clearcolourValue.color = {173 / 255.0f, 216 / 255.0f, 230 / 255.0f,
+                            1.0f}; // light blue
+
+  vk::ClearValue cleardepthvalue{};
+  cleardepthvalue.depthStencil = vk::ClearDepthStencilValue{1.0f, 0};
+
+  std::array<vk::ClearValue, 2> clearvalues{clearcolourValue, cleardepthvalue};
 
   result = m_commandBuffer.begin(&beginInfo);
   assert(result == vk::Result::eSuccess);
@@ -176,8 +224,8 @@ void Renderer::recordCommandBuffer(int imageIndex) {
   renderPassBeginInfo.renderArea.offset = vk::Offset2D(0, 0);
   renderPassBeginInfo.renderArea.extent = m_swapChain->getExtent();
 
-  renderPassBeginInfo.clearValueCount = 1;
-  renderPassBeginInfo.pClearValues = &clearValue;
+  renderPassBeginInfo.clearValueCount = 2;
+  renderPassBeginInfo.pClearValues = clearvalues.data();
 
   m_commandBuffer.beginRenderPass(&renderPassBeginInfo,
                                   vk::SubpassContents::eInline);
@@ -186,7 +234,8 @@ void Renderer::recordCommandBuffer(int imageIndex) {
                                m_pipeline->getHandle());
 
   PushConstant pushconstants;
-  pushconstants.data = glm::vec4(1.0f);
+  pushconstants.rotationData = rotation;
+  pushconstants.viewproj = camera->getViewProj();
   // TODO , create a render matrix
   m_commandBuffer.pushConstants(m_pipelineLayout->getHandle(),
                                 vk::ShaderStageFlagBits::eVertex, 0,
@@ -197,7 +246,8 @@ void Renderer::recordCommandBuffer(int imageIndex) {
   m_commandBuffer.bindVertexBuffers(0, 1, &vbuffer, &offsets);
   m_commandBuffer.bindIndexBuffer(m_indexBuffer->getHandle(), 0,
                                   vk::IndexType::eUint32);
-  m_commandBuffer.drawIndexed(6, 1, 0, 0, 0);
+  m_commandBuffer.drawIndexed(testIndices.size(), 1, 0, 0, 0);
+  
 
   ImGui::Render();
   auto draw_data = ImGui::GetDrawData();
@@ -263,6 +313,8 @@ void Renderer::drawFrame() {
   res = g_vkContext->presentQueue.presentKHR(&presentInfo);
   assert(res == vk::Result::eSuccess);
 }
+
+void Renderer::setData(glm::mat4 rotData) { rotation = rotData; }
 
 Renderer::~Renderer() {
 

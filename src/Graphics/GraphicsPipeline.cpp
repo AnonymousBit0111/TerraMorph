@@ -148,6 +148,29 @@ Pipeline::Pipeline(const std::string &fsPath, const std::string &vsPath,
   colourBlendInfo.blendConstants[2] = 1;
   colourBlendInfo.blendConstants[3] = 1;
 
+  vk::PipelineDepthStencilStateCreateInfo depthStencil{};
+
+  depthStencil.depthTestEnable = VK_TRUE;
+  depthStencil.depthWriteEnable = VK_TRUE;
+  depthStencil.depthCompareOp = vk::CompareOp::eLess;
+
+  depthStencil.stencilTestEnable = VK_FALSE;
+  depthStencil.front.failOp = vk::StencilOp::eKeep;
+  depthStencil.front.passOp = vk::StencilOp::eIncrementAndWrap;
+  depthStencil.front.depthFailOp = vk::StencilOp::eKeep;
+  depthStencil.front.compareOp = vk::CompareOp::eAlways;
+  depthStencil.front.compareMask = 0xFF;
+  depthStencil.front.writeMask = 0xFF;
+  depthStencil.front.reference = 1;
+
+  depthStencil.back.failOp = vk::StencilOp::eKeep;
+  depthStencil.back.passOp = vk::StencilOp::eDecrementAndWrap;
+  depthStencil.back.depthFailOp = vk::StencilOp::eKeep;
+  depthStencil.back.compareOp = vk::CompareOp::eAlways;
+  depthStencil.back.compareMask = 0xFF;
+  depthStencil.back.writeMask = 0xFF;
+  depthStencil.back.reference = 1;
+
   vk::GraphicsPipelineCreateInfo pipelineCreateInfo{};
 
   pipelineCreateInfo.stageCount = 2;
@@ -158,9 +181,8 @@ Pipeline::Pipeline(const std::string &fsPath, const std::string &vsPath,
   pipelineCreateInfo.pViewportState = &viewportState;
   pipelineCreateInfo.pRasterizationState = &rasterizer;
   pipelineCreateInfo.pMultisampleState = &multisampling;
-  pipelineCreateInfo.pDepthStencilState = nullptr; // Optional
+  pipelineCreateInfo.pDepthStencilState = &depthStencil;
   pipelineCreateInfo.pColorBlendState = &colourBlendInfo;
-  // pipelineCreateInfo.pDynamicState = &dynamicState;
   pipelineCreateInfo.layout = layout;
 
   pipelineCreateInfo.renderPass = rp;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Vertex.h"
+#include "Graphics/Camera.h"
 #include "Graphics/GraphicsPipeline.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/PipelineLayout.h"
@@ -37,14 +38,19 @@ private:
 
   std::vector<Core::PosColourVertex> testVertices;
   std::vector<glm::uint32_t> testIndices;
+  glm::mat4 rotation;
+  Camera *camera;
 
   void initImGui();
 
 public:
-  Renderer(SDL_Window *win);
+  Renderer(SDL_Window *win, Camera *cam);
   void beginFrame();
   void drawFrame();
   void recordCommandBuffer(int imageIndex);
+  void setData(glm::mat4 rotData); // temporary function to set the value of the
+                                   // rotation matrix which is a pushconstant
+  glm::mat4 getData() { return rotation; }
   ~Renderer();
 };
 

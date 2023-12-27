@@ -16,6 +16,10 @@ private:
 
   std::vector<vk::ImageView> m_imageViews;
   std::vector<vk::Image> m_images;
+
+  std::vector<vk::ImageView> m_depthImageViews;
+  std::vector<vk::Image> m_depthImages;
+  std::vector <vk::DeviceMemory> m_depthImageMemory;
   std::vector<vk::Framebuffer> m_framebuffers;
 
   vk::SwapchainKHR m_handle;
