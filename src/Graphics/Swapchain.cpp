@@ -24,10 +24,9 @@ vk::SurfaceFormatKHR Swapchain::chooseSurfaceFormat() {
           Core::g_vkContext->surface);
   for (auto &availableFormat : availableFormats) {
     if (availableFormat.format == vk::Format::eB8G8R8A8Srgb &&
-        availableFormat.colorSpace == vk::ColorSpaceKHR::eDisplayNativeAMD)
-    // TODO research why this colour space looks the best for mac
+        availableFormat.colorSpace == vk::ColorSpaceKHR::eDisplayNativeAMD) {
+      // TODO research why this colour space looks the best for mac
 
-    {
       return availableFormat;
     }
   }

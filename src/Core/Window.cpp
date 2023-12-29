@@ -31,13 +31,15 @@ void Window::pollEvents() {
 
     ImGui_ImplSDL2_ProcessEvent(&event);
 
-    // TODO , make this work for every event
-    if (event.type == SDL_QUIT) {
-      auto range = m_eventHandlers.equal_range(EventType::Quit);
+    EventInfo eventInfo;
 
-      for (auto it = range.first; it != range.second; ++it) {
-        it->second({EventType::Quit});
-      }
+    eventInfo.type = (EventType)event.type;
+    eventInfo.mouseMotion = glm::vec2(event.motion.xrel,event.motion.yrel);
+
+    auto range = m_eventHandlers.equal_range(eventInfo.type);
+
+    for (auto it = range.first; it != range.second; ++it) {
+      it->second(eventInfo);
     }
   }
 }

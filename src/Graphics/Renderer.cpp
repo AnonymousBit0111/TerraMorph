@@ -236,7 +236,7 @@ void Renderer::recordCommandBuffer(int imageIndex) {
   PushConstant pushconstants;
   pushconstants.rotationData = rotation;
   pushconstants.viewproj = camera->getViewProj();
-  // TODO , create a render matrix
+
   m_commandBuffer.pushConstants(m_pipelineLayout->getHandle(),
                                 vk::ShaderStageFlagBits::eVertex, 0,
                                 sizeof(pushconstants), &pushconstants);

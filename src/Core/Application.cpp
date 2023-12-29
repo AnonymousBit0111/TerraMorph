@@ -1,10 +1,13 @@
 #include "Core/Application.h"
+#include "Core/Event.h"
 #include "Core/Globals.h"
+#include "Core/Logging.h"
 #include "Core/Window.h"
 #include "Graphics/Camera.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/VkContext.h"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
 #include "imgui.h"
 #include <memory>
 
@@ -14,7 +17,7 @@ using namespace TerraMorph::Graphics;
 std::shared_ptr<Window> Application::window = nullptr;
 std::shared_ptr<Renderer> Application::renderer = nullptr;
 
-Camera Application::camera = Camera(glm::vec2(500, 500), glm::vec3(0, 0, 11));
+Camera Application::camera = Camera(glm::vec2(1080, 720), glm::vec3(0, 0, 11));
 bool Application::open = false;
 void Application::init() {
 
@@ -22,6 +25,7 @@ void Application::init() {
   open = true;
 
   window->subscribeToEvent(TerraMorph::Core::EventType::Quit, quit);
+  window->subscribeToEvent(TerraMorph::Core::EventType::MouseMoved, mouseMoved);
 
   initVulkan();
 }
@@ -31,9 +35,6 @@ void Application::initVulkan() {
 }
 
 void Application::UIcalls() {
-
-  ImGui::Begin("sup");
-  ImGui::End();
 
   static float x, y, z, px, py, pz, scale, rot = 0.0f;
 
@@ -68,6 +69,10 @@ void Application::UIcalls() {
   ImGui::Text("position.y:%f", camera.getPosition().y);
   ImGui::Text("position.z:%f", camera.getPosition().z);
 
+  // static glm::vec3 target = glm::vec3(1, 1, 1);
+  // ImGui::InputFloat3("look at", &target.x);
+  // camera.lookAt(target);
+
   if (ImGui::Button("applymovement")) {
 
     camera.move(glm::vec3(x, y, z));
@@ -79,20 +84,22 @@ void Application::UIcalls() {
   }
 
   if (rotating) {
-    // rotation = glm::rotate(rotation, glm::radians(rot), glm::vec3(0, 1, 0));
 
     renderer->setData(glm::rotate(renderer->getData(), glm::radians(rot),
                                   glm::vec3(0, 1, 0)));
   }
   ImGui::End();
 }
+
+void Application::mouseMoved(TerraMorph::Core::EventInfo info) {
+
+  camera.calculateDirection(info.mouseMotion);
+}
 void Application::run() {
   while (Application::open) {
     window->pollEvents();
 
     renderer->beginFrame();
-
-    // Any ImGui call should go here
 
     UIcalls();
 

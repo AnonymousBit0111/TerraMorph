@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/EventHandlers.h"
 #include "Core/Window.h"
 #include "Graphics/Camera.h"
 #include "Graphics/Renderer.h"
@@ -22,6 +23,8 @@ public:
   static void initVulkan();
   static void run();
   static void cleanup();
+
+  static void mouseMoved(TerraMorph::Core::EventInfo info);
   static void quit(TerraMorph::Core::EventInfo info) {
     cleanup();
     exit(0);
