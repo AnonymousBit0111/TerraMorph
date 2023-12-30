@@ -17,6 +17,8 @@ public:
   static std::shared_ptr<Window> window;
   static std::shared_ptr<Graphics::Renderer> renderer;
   static Graphics::Camera camera;
+  static bool captureMouse;
+
   static bool open;
 
   static void init();
@@ -24,12 +26,15 @@ public:
   static void run();
   static void cleanup();
 
-  static void mouseMoved(TerraMorph::Core::EventInfo info);
-  static void quit(TerraMorph::Core::EventInfo info) {
+  static void mouseMoved(EventInfo info);
+  static void quit(EventInfo info) {
     cleanup();
     exit(0);
   }
+  static void keyPressed(EventInfo info);
 };
+
+
 
 } // namespace Core
 } // namespace TerraMorph

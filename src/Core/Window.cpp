@@ -35,6 +35,7 @@ void Window::pollEvents() {
 
     eventInfo.type = (EventType)event.type;
     eventInfo.mouseMotion = glm::vec2(event.motion.xrel,event.motion.yrel);
+    eventInfo.key = event.key.keysym.sym;
 
     auto range = m_eventHandlers.equal_range(eventInfo.type);
 
