@@ -8,7 +8,7 @@ class Pipeline {
 
 private:
   vk::Pipeline m_handle;
-  vk::VertexInputBindingDescription m_bindingDesc;
+  std::array<vk::VertexInputBindingDescription,2> m_bindingDescs;
   std::vector<vk::VertexInputAttributeDescription >m_attributeDescriptions;
 
 public:

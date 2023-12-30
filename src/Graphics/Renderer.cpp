@@ -3,6 +3,7 @@
 #include "Core/Vertex.h"
 #include "Graphics/Camera.h"
 #include "Graphics/GraphicsPipeline.h"
+#include "Graphics/InstanceBuffer.h"
 #include "Graphics/PipelineLayout.h"
 #include "Graphics/RenderPass.h"
 #include "Graphics/Swapchain.h"
@@ -76,6 +77,10 @@ Renderer::Renderer(SDL_Window *window, Camera *cam)
   m_renderPass = std::make_unique<RenderPass>(m_swapChain->getImageFormat());
   m_swapChain->createFrameBuffers(m_renderPass->getHandle());
   m_pipelineLayout = std::make_unique<PipelineLayout>();
+
+  // NOTE : instanceCount variable here
+  m_instanceBuffer =
+      std::make_unique<InstanceBuffer>(m_instanceCount * sizeof(glm::mat4));
   vk::PushConstantRange pushConstantRange{
 
   };
@@ -182,6 +187,11 @@ Renderer::Renderer(SDL_Window *window, Camera *cam)
       std::make_unique<IndexBuffer>(testIndices.size() * sizeof(glm::uint32_t));
 
   m_indexBuffer->update(testIndices);
+
+  instanceModels.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(1, 0, 4)));
+  instanceModels.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(1, 0, 8)));
+
+  m_instanceBuffer->update(instanceModels);
 }
 
 void Renderer::beginFrame() {
@@ -194,7 +204,6 @@ void Renderer::beginFrame() {
   result = g_vkContext->device.resetFences(1, &m_frameInflight);
   assert(result == vk::Result::eSuccess && "failed to reset in flight fence");
 
-  // TODO , initialise imgui frame here
   ImGui_ImplVulkan_NewFrame();
   ImGui_ImplSDL2_NewFrame();
   ImGui::NewFrame();
@@ -241,13 +250,14 @@ void Renderer::recordCommandBuffer(int imageIndex) {
                                 vk::ShaderStageFlagBits::eVertex, 0,
                                 sizeof(pushconstants), &pushconstants);
 
-  vk::DeviceSize offsets = {0};
-  auto vbuffer = m_vertexBuffer->getHandle();
-  m_commandBuffer.bindVertexBuffers(0, 1, &vbuffer, &offsets);
+  std::array<vk::DeviceSize, 2> offsets = {0, 0};
+  std::array<vk::Buffer, 2> vbuffers = {m_vertexBuffer->getHandle(),
+                                        m_instanceBuffer->getHandle()};
+  m_commandBuffer.bindVertexBuffers(0, vbuffers.size(), vbuffers.data(),
+                                    offsets.data());
   m_commandBuffer.bindIndexBuffer(m_indexBuffer->getHandle(), 0,
                                   vk::IndexType::eUint32);
-  m_commandBuffer.drawIndexed(testIndices.size(), 1, 0, 0, 0);
-  
+  m_commandBuffer.drawIndexed(testIndices.size(), m_instanceCount, 0, 0, 0);
 
   ImGui::Render();
   auto draw_data = ImGui::GetDrawData();
@@ -263,6 +273,8 @@ void Renderer::recordCommandBuffer(int imageIndex) {
 }
 
 void Renderer::drawFrame() {
+
+  m_instanceBuffer->update(instanceModels);
   auto imageIndex = g_vkContext->device.acquireNextImageKHR(
       m_swapChain->getHandle(), UINT64_MAX, m_imageAvailable);
 

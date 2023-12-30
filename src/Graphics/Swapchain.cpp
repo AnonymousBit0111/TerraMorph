@@ -196,7 +196,7 @@ void Swapchain::createFrameBuffers(vk::RenderPass rp) {
     vk::FramebufferCreateInfo frameBufferInfo{};
     frameBufferInfo.renderPass = rp;
     frameBufferInfo.attachmentCount =
-        1; // i know the depth image wont be used , this is for testing
+        2; // i know the depth image wont be used , this is for testing
     frameBufferInfo.pAttachments = attachments;
     frameBufferInfo.width = m_extent.width;
     frameBufferInfo.height = m_extent.height;

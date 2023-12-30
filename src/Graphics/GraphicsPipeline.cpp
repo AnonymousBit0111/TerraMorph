@@ -30,7 +30,21 @@ vk::VertexInputBindingDescription getBindingDescription() {
   return bindingDescription;
 }
 
+vk::VertexInputBindingDescription getInstanceBindingDescription() {
+  vk::VertexInputBindingDescription bindingDescription{};
+  bindingDescription.binding =
+      1; // I am storing model matrices in a different buffer
+  bindingDescription.stride =
+      sizeof(glm::mat4); // this may need to change if more variables are
+                         // required for each instance
+  bindingDescription.inputRate = vk::VertexInputRate::eInstance;
+
+  return bindingDescription;
+}
+
 std::vector<vk::VertexInputAttributeDescription> getAttributeDescriptions() {
+
+  std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
   vk::VertexInputAttributeDescription Pos{};
   Pos.binding = 0;
   Pos.location = 0;
@@ -43,7 +57,22 @@ std::vector<vk::VertexInputAttributeDescription> getAttributeDescriptions() {
   Colour.format = vk::Format::eR32G32B32A32Sfloat; // r,g,b,a
   Colour.offset = offsetof(PosColourVertex, colour);
 
-  return {Pos, Colour};
+  attributeDescriptions.push_back(Pos);
+  attributeDescriptions.push_back(Colour);
+
+  for (int i = 0; i < 4; ++i) {
+
+    vk::VertexInputAttributeDescription desc{};
+    desc.binding = 1;      // same as binding desc
+    desc.location = i + 2; // Different location for each row
+    // TODO: construct the matrix in the shader
+    desc.format =
+        vk::Format::eR32G32B32A32Sfloat; // 4 floats per row of the matrix
+    desc.offset = (sizeof(float) * 4 * i);
+    attributeDescriptions.push_back(desc);
+  }
+
+  return attributeDescriptions;
 }
 
 Pipeline::Pipeline(const std::string &fsPath, const std::string &vsPath,
@@ -70,12 +99,12 @@ Pipeline::Pipeline(const std::string &fsPath, const std::string &vsPath,
 
   vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
-  m_bindingDesc = getBindingDescription();
+  m_bindingDescs = {getBindingDescription(), getInstanceBindingDescription()};
 
   m_attributeDescriptions = getAttributeDescriptions();
 
-  vertexInputInfo.vertexBindingDescriptionCount = 1;
-  vertexInputInfo.pVertexBindingDescriptions = &m_bindingDesc;
+  vertexInputInfo.vertexBindingDescriptionCount = 2;
+  vertexInputInfo.pVertexBindingDescriptions = m_bindingDescs.data();
 
   vertexInputInfo.vertexAttributeDescriptionCount =
       m_attributeDescriptions.size();

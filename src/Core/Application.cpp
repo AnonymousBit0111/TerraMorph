@@ -69,10 +69,6 @@ void Application::UIcalls() {
   ImGui::Text("position.y:%f", camera.getPosition().y);
   ImGui::Text("position.z:%f", camera.getPosition().z);
 
-  // static glm::vec3 target = glm::vec3(1, 1, 1);
-  // ImGui::InputFloat3("look at", &target.x);
-  // camera.lookAt(target);
-
   if (ImGui::Button("applymovement")) {
 
     camera.move(glm::vec3(x, y, z));
@@ -87,6 +83,11 @@ void Application::UIcalls() {
 
     renderer->setData(glm::rotate(renderer->getData(), glm::radians(rot),
                                   glm::vec3(0, 1, 0)));
+    auto instanceModels = renderer->getInstanceModels();
+
+    for (auto &i : *instanceModels) {
+      i = glm::rotate(i, glm::radians(rot), glm::vec3(0, 1, 0));
+    }
   }
   ImGui::End();
 }

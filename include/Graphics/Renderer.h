@@ -4,6 +4,7 @@
 #include "Graphics/Camera.h"
 #include "Graphics/GraphicsPipeline.h"
 #include "Graphics/IndexBuffer.h"
+#include "Graphics/InstanceBuffer.h"
 #include "Graphics/PipelineLayout.h"
 #include "Graphics/RenderPass.h"
 #include "Graphics/Swapchain.h"
@@ -12,6 +13,7 @@
 #include "vulkan/vulkan_handles.hpp"
 #include <SDL_video.h>
 #include <memory>
+#include <vector>
 namespace TerraMorph {
 namespace Graphics {
 class Renderer {
@@ -22,6 +24,7 @@ private:
   std::unique_ptr<PipelineLayout> m_pipelineLayout;
   std::unique_ptr<Pipeline> m_pipeline;
   std::unique_ptr<VertexBuffer> m_vertexBuffer;
+  std::unique_ptr<InstanceBuffer> m_instanceBuffer;
   std::unique_ptr<IndexBuffer> m_indexBuffer;
 
   // TODO , render more than 1 frame ahead
@@ -38,6 +41,9 @@ private:
 
   std::vector<Core::PosColourVertex> testVertices;
   std::vector<glm::uint32_t> testIndices;
+  std::vector<glm::mat4> instanceModels;
+
+  int m_instanceCount = 2;
   glm::mat4 rotation;
   Camera *camera;
 
@@ -51,6 +57,8 @@ public:
   void setData(glm::mat4 rotData); // temporary function to set the value of the
                                    // rotation matrix which is a pushconstant
   glm::mat4 getData() { return rotation; }
+
+  std::vector<glm::mat4> *getInstanceModels() { return &instanceModels; } // so that i can change the models externally
   ~Renderer();
 };
 
