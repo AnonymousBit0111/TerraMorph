@@ -1,11 +1,16 @@
 #pragma once
 
-#include "glm/fwd.hpp"
+#include "glm/glm.hpp"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include <vector>
 namespace TerraMorph {
 namespace Graphics {
+
+struct InstanceData {
+  glm::mat4 model;
+  glm::vec4 colour;
+};
 class InstanceBuffer {
 
 private:
@@ -18,12 +23,11 @@ private:
 public:
   InstanceBuffer(glm::uint32_t size);
 
-  void update(std::vector<glm::mat4> &matrices);
+  void update(std::vector<InstanceData> &matrices);
   void resize(glm::uint32_t size);
-  vk::Buffer getHandle()const{return m_handle;}
+  vk::Buffer getHandle() const { return m_handle; }
   ~InstanceBuffer();
 };
-
 
 } // namespace Graphics
 } // namespace TerraMorph

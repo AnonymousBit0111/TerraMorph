@@ -71,21 +71,19 @@ void Renderer::initImGui() {
   ImGui::StyleColorsDark();
 }
 
-Renderer::Renderer(SDL_Window *window, Camera *cam)
-    : p_window(window), camera(cam) {
+Renderer::Renderer(SDL_Window *window, Camera *cam, int instancecount)
+    : p_window(window), camera(cam), m_maxInstanceCount(instancecount) {
   m_swapChain = std::make_unique<Swapchain>(window);
   m_renderPass = std::make_unique<RenderPass>(m_swapChain->getImageFormat());
   m_swapChain->createFrameBuffers(m_renderPass->getHandle());
   m_pipelineLayout = std::make_unique<PipelineLayout>();
 
-  // NOTE : instanceCount variable here
-  m_instanceBuffer =
-      std::make_unique<InstanceBuffer>(m_instanceCount * sizeof(glm::mat4));
+  m_instanceBuffer = std::make_unique<InstanceBuffer>(m_maxInstanceCount *
+                                                      sizeof(InstanceData));
   vk::PushConstantRange pushConstantRange{
 
   };
 
-  rotation = glm::mat4(1); // dont know why this is needed
   pushConstantRange.offset = 0;
 
   pushConstantRange.size = sizeof(Core::PushConstant);
@@ -130,52 +128,51 @@ Renderer::Renderer(SDL_Window *window, Camera *cam)
 
   initImGui();
 
-  testVertices = {{
-      // Front face
-      {glm::vec3{-1.0, -1.0, 1.0},
-       glm::vec4{1.0, 0.0, 0.0, 1.0f}}, // bottom-left
-      {glm::vec3{1.0, -1.0, 1.0},
-       glm::vec4{1.0, 1.0, 0.0, 1.0f}},                         // bottom-right
-      {glm::vec3{1.0, 1.0, 1.0}, glm::vec4{1.0, 0.0, 0.0, 1}},  // top-right
-      {glm::vec3{-1.0, 1.0, 1.0}, glm::vec4{1.0, 0.0, 0.0, 1}}, // top-left
+  glm::vec4 cubeColour = glm::vec4(0.5f);
 
-      // Back face
-      {glm::vec3{1.0, -1.0, -1.0}, glm::vec4{0.0, 1.0, 0.0, 1}}, // bottom-left
-      {glm::vec3{-1.0, -1.0, -1.0},
-       glm::vec4{0.0, 1.0, 0.0, 1}},                             // bottom-right
-      {glm::vec3{-1.0, 1.0, -1.0}, glm::vec4{0.0, 1.0, 0.0, 1}}, // top-right
-      {glm::vec3{1.0, 1.0, -1.0}, glm::vec4{0.0, 1.0, 1.0, 1}},  // top-left
+  cubeVertices = {// Front face
+                  {
+                      {glm::vec3{-1.0, -1.0, 1.0}, cubeColour}, // bottom-left
+                      {glm::vec3{1.0, -1.0, 1.0}, cubeColour},  // bottom-right
+                      {glm::vec3{1.0, 1.0, 1.0}, cubeColour},   // top-right
+                      {glm::vec3{-1.0, 1.0, 1.0}, cubeColour},  // top-left
 
-      // Left face
-      {glm::vec3{-1.0, -1.0, -1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}, // bottom-left
-      {glm::vec3{-1.0, -1.0, 1.0}, glm::vec4{0.0, 0.0, 1.0, 1}}, // bottom-right
-      {glm::vec3{-1.0, 1.0, 1.0}, glm::vec4{0.0, 0.0, 1.0, 1}},  // top-right
-      {glm::vec3{-1.0, 1.0, -1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}, // top-left
+                      // Back face
+                      {glm::vec3{1.0, -1.0, -1.0}, cubeColour},  // bottom-left
+                      {glm::vec3{-1.0, -1.0, -1.0}, cubeColour}, // bottom-right
+                      {glm::vec3{-1.0, 1.0, -1.0}, cubeColour},  // top-right
+                      {glm::vec3{1.0, 1.0, -1.0}, cubeColour},   // top-left
 
-      // Right face
-      {glm::vec3{1.0, -1.0, 1.0}, glm::vec4{1.0, 1.0, 0.0, 1}},  // bottom-left
-      {glm::vec3{1.0, -1.0, -1.0}, glm::vec4{1.0, 1.0, 0.0, 1}}, // bottom-right
-      {glm::vec3{1.0, 1.0, -1.0}, glm::vec4{1.0, 1.0, 0.0, 1}},  // top-right
-      {glm::vec3{1.0, 1.0, 1.0}, glm::vec4{1.0, 1.0, 0.0, 1}},   // top-left
+                      // Left face
+                      {glm::vec3{-1.0, -1.0, -1.0}, cubeColour}, // bottom-left
+                      {glm::vec3{-1.0, -1.0, 1.0}, cubeColour},  // bottom-right
+                      {glm::vec3{-1.0, 1.0, 1.0}, cubeColour},   // top-right
+                      {glm::vec3{-1.0, 1.0, -1.0}, cubeColour},  // top-left
 
-      // Top face
-      {glm::vec3{-1.0, 1.0, 1.0}, glm::vec4{0.0, 1.0, 1.0, 1}},  // bottom-left
-      {glm::vec3{1.0, 1.0, 1.0}, glm::vec4{0.0, 1.0, 1.0, 1}},   // bottom-right
-      {glm::vec3{1.0, 1.0, -1.0}, glm::vec4{0.0, 1.0, 1.0, 1}},  // top-right
-      {glm::vec3{-1.0, 1.0, -1.0}, glm::vec4{0.0, 1.0, 1.0, 1}}, // top-left
+                      // Right face
+                      {glm::vec3{1.0, -1.0, 1.0}, cubeColour},  // bottom-left
+                      {glm::vec3{1.0, -1.0, -1.0}, cubeColour}, // bottom-right
+                      {glm::vec3{1.0, 1.0, -1.0}, cubeColour},  // top-right
+                      {glm::vec3{1.0, 1.0, 1.0}, cubeColour},   // top-left
 
-      // Bottom face
-      {glm::vec3{-1.0, -1.0, -1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}, // bottom-left
-      {glm::vec3{1.0, -1.0, -1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}, // bottom-right
-      {glm::vec3{1.0, -1.0, 1.0}, glm::vec4{1.0, 0.0, 1.0, 1}},  // top-right
-      {glm::vec3{-1.0, -1.0, 1.0}, glm::vec4{1.0, 0.0, 1.0, 1}}  // top-left
-  }};
+                      // Top face
+                      {glm::vec3{-1.0, 1.0, 1.0}, cubeColour},  // bottom-left
+                      {glm::vec3{1.0, 1.0, 1.0}, cubeColour},   // bottom-right
+                      {glm::vec3{1.0, 1.0, -1.0}, cubeColour},  // top-right
+                      {glm::vec3{-1.0, 1.0, -1.0}, cubeColour}, // top-left
+
+                      // Bottom face
+                      {glm::vec3{-1.0, -1.0, -1.0}, cubeColour}, // bottom-left
+                      {glm::vec3{1.0, -1.0, -1.0}, cubeColour},  // bottom-right
+                      {glm::vec3{1.0, -1.0, 1.0}, cubeColour},   // top-right
+                      {glm::vec3{-1.0, -1.0, 1.0}, cubeColour}   // top-left
+                  }};
 
   m_vertexBuffer = std::make_unique<VertexBuffer>(sizeof(PosColourVertex) *
-                                                  testVertices.size());
-  m_vertexBuffer->update(testVertices);
+                                                  cubeVertices.size());
+  m_vertexBuffer->update(cubeVertices);
 
-  testIndices = {
+  cubeIndices = {
       0,  1,  2,  2,  3,  0,  // Front face
       4,  5,  6,  6,  7,  4,  // Back face
       8,  9,  10, 10, 11, 8,  // Left face
@@ -184,14 +181,9 @@ Renderer::Renderer(SDL_Window *window, Camera *cam)
       20, 21, 22, 22, 23, 20  // Bottom face
   };
   m_indexBuffer =
-      std::make_unique<IndexBuffer>(testIndices.size() * sizeof(glm::uint32_t));
+      std::make_unique<IndexBuffer>(cubeIndices.size() * sizeof(glm::uint32_t));
 
-  m_indexBuffer->update(testIndices);
-
-  instanceModels.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(1, 0, 4)));
-  instanceModels.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(1, 0, 8)));
-
-  m_instanceBuffer->update(instanceModels);
+  m_indexBuffer->update(cubeIndices);
 }
 
 void Renderer::beginFrame() {
@@ -257,7 +249,7 @@ void Renderer::recordCommandBuffer(int imageIndex) {
                                     offsets.data());
   m_commandBuffer.bindIndexBuffer(m_indexBuffer->getHandle(), 0,
                                   vk::IndexType::eUint32);
-  m_commandBuffer.drawIndexed(testIndices.size(), m_instanceCount, 0, 0, 0);
+  m_commandBuffer.drawIndexed(cubeIndices.size(), m_instanceCount, 0, 0, 0);
 
   ImGui::Render();
   auto draw_data = ImGui::GetDrawData();
@@ -274,7 +266,12 @@ void Renderer::recordCommandBuffer(int imageIndex) {
 
 void Renderer::drawFrame() {
 
-  m_instanceBuffer->update(instanceModels);
+  if (instances.size() > m_maxInstanceCount) {
+
+    m_instanceBuffer->resize(instances.size() * sizeof(InstanceData));
+    m_maxInstanceCount = instances.size();
+  }
+  m_instanceBuffer->update(instances);
   auto imageIndex = g_vkContext->device.acquireNextImageKHR(
       m_swapChain->getHandle(), UINT64_MAX, m_imageAvailable);
 
@@ -326,11 +323,7 @@ void Renderer::drawFrame() {
   assert(res == vk::Result::eSuccess);
 }
 
-void Renderer::setData(glm::mat4 rotData) { rotation = rotData; }
-
 Renderer::~Renderer() {
-
-  // TODO , make sure there are no future mutex lock issues
 
   vk::Result res = g_vkContext->device.waitForFences(
       1, &m_frameInflight, vk::Bool32(true), UINT64_MAX);
@@ -345,4 +338,20 @@ Renderer::~Renderer() {
   g_vkContext->device.destroySemaphore(m_renderFinished);
   g_vkContext->device.destroyFence(m_frameInflight);
   g_vkContext->device.destroyDescriptorPool(imGuiDescriptorPool);
+}
+
+void Renderer::addInstance(glm::mat4 model, glm::vec4 colour) {
+  instances.push_back({model, colour});
+
+  if (instances.size() > m_maxInstanceCount) {
+    m_maxInstanceCount = instances.size();
+    m_instanceBuffer = std::make_unique<InstanceBuffer>(m_maxInstanceCount *
+                                                        sizeof(InstanceData));
+    // the old buffer should be destroyed
+    // TODO: look into a copy command with a command buffer
+
+    m_instanceBuffer->update(instances);
+  }
+
+  m_instanceCount++;
 }

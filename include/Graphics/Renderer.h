@@ -9,6 +9,7 @@
 #include "Graphics/RenderPass.h"
 #include "Graphics/Swapchain.h"
 #include "Graphics/VertexBuffer.h"
+#include "Terrain/Cube.h"
 #include "glm/fwd.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include <SDL_video.h>
@@ -39,26 +40,27 @@ private:
 
   SDL_Window *p_window;
 
-  std::vector<Core::PosColourVertex> testVertices;
-  std::vector<glm::uint32_t> testIndices;
-  std::vector<glm::mat4> instanceModels;
+  std::vector<Core::PosColourVertex> cubeVertices;
+  std::vector<glm::uint32_t> cubeIndices;
+  std::vector<InstanceData> instances;
 
-  int m_instanceCount = 2;
+  int m_maxInstanceCount = 0;
+  int m_instanceCount = 0;
   glm::mat4 rotation;
   Camera *camera;
 
   void initImGui();
 
 public:
-  Renderer(SDL_Window *win, Camera *cam);
+  Renderer(SDL_Window *win, Camera *cam, int instanceCount);
   void beginFrame();
   void drawFrame();
+  void addInstance(glm::mat4 model,glm::vec4 colour);
   void recordCommandBuffer(int imageIndex);
-  void setData(glm::mat4 rotData); // temporary function to set the value of the
-                                   // rotation matrix which is a pushconstant
-  glm::mat4 getData() { return rotation; }
 
-  std::vector<glm::mat4> *getInstanceModels() { return &instanceModels; } // so that i can change the models externally
+  std::vector<InstanceData> *getInstanceModels() {
+    return &instances;
+  } // so that i can change the models externally
   ~Renderer();
 };
 

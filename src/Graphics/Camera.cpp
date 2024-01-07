@@ -27,7 +27,7 @@ Camera::Camera(glm::vec2 size, glm::vec3 position)
   float fov = glm::radians(60.0f);
   float aspect = m_size.x / m_size.y;
   float nearClip = 0.1f;
-  float farClip = 1000.0f;
+  float farClip = 10000.0f;
   m_proj = glm::perspective(fov, aspect, nearClip, farClip);
   m_viewProj = m_proj * m_view;
 }
@@ -42,7 +42,7 @@ void Camera::updateMatrices() {
   float aspect = m_size.x / m_size.y;
 
   float nearClip = 0.1f;
-  float farClip = 1000.0f;
+  float farClip = 10000.0f;
   m_proj = glm::perspective(fov, aspect, nearClip, farClip);
   m_viewProj = m_proj * m_view;
 }

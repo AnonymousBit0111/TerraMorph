@@ -36,7 +36,7 @@ InstanceBuffer::InstanceBuffer(glm::uint32_t size) {
   // Note find out if it is needed to unmap this memory
   m_data = g_vkContext->device.mapMemory(m_memory, 0, bufferInfo.size);
 }
-void InstanceBuffer::update(std::vector<glm::mat4> &matrices) {
+void InstanceBuffer::update(std::vector<InstanceData> &matrices) {
   assert(matrices.size() * sizeof(matrices[0]) <= m_size);
   memcpy(m_data, matrices.data(), matrices.size() * sizeof(matrices[0]));
 }
@@ -67,9 +67,6 @@ void InstanceBuffer::resize(glm::uint32_t size) {
       g_vkContext->device.allocateMemory(&memInfo, nullptr, &newMemory),
       "Failed to allocate memory for new buffer during resize");
 
-  
-
-
   if (m_data) {
     g_vkContext->device.unmapMemory(m_memory);
   }
@@ -85,7 +82,6 @@ void InstanceBuffer::resize(glm::uint32_t size) {
 
   // Map new memory
   m_data = g_vkContext->device.mapMemory(m_memory, 0, size);
-
 }
 
 InstanceBuffer::~InstanceBuffer() {

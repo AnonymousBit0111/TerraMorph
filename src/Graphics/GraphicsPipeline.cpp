@@ -2,6 +2,7 @@
 #include "Core/FileHandler.h"
 #include "Core/Globals.h"
 #include "Core/Vertex.h"
+#include "Graphics/InstanceBuffer.h"
 #include "vulkan/vulkan_structs.hpp"
 #include <vector>
 
@@ -33,10 +34,10 @@ vk::VertexInputBindingDescription getBindingDescription() {
 vk::VertexInputBindingDescription getInstanceBindingDescription() {
   vk::VertexInputBindingDescription bindingDescription{};
   bindingDescription.binding =
-      1; // I am storing model matrices in a different buffer
+      1; // I am storing instance data in a different buffer
   bindingDescription.stride =
-      sizeof(glm::mat4); // this may need to change if more variables are
-                         // required for each instance
+      sizeof(InstanceData); // this may need to change if more variables are
+                            // required for each instance
   bindingDescription.inputRate = vk::VertexInputRate::eInstance;
 
   return bindingDescription;
@@ -60,12 +61,12 @@ std::vector<vk::VertexInputAttributeDescription> getAttributeDescriptions() {
   attributeDescriptions.push_back(Pos);
   attributeDescriptions.push_back(Colour);
 
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 5; ++i) // 4 for the matrix , 1 for colour
+  {
 
     vk::VertexInputAttributeDescription desc{};
     desc.binding = 1;      // same as binding desc
     desc.location = i + 2; // Different location for each row
-    // TODO: construct the matrix in the shader
     desc.format =
         vk::Format::eR32G32B32A32Sfloat; // 4 floats per row of the matrix
     desc.offset = (sizeof(float) * 4 * i);

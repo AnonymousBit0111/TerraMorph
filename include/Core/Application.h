@@ -5,6 +5,7 @@
 #include "Graphics/Camera.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/VkContext.h"
+#include "Terrain/Cube.h"
 #include <SDL.h>
 #include <memory>
 namespace TerraMorph {
@@ -12,14 +13,19 @@ namespace Core {
 class Application {
 private:
   static void UIcalls();
+  static void regenTerrain();
 
 public:
   static std::shared_ptr<Window> window;
   static std::shared_ptr<Graphics::Renderer> renderer;
   static Graphics::Camera camera;
+  static std::vector<Terrain::Cube> cubes;
   static bool captureMouse;
 
   static bool open;
+
+  static float  persistance , lacunarity;
+  static int octaves;
 
   static void init();
   static void initVulkan();
