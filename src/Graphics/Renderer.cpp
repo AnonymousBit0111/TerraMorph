@@ -184,6 +184,7 @@ Renderer::Renderer(SDL_Window *window, Camera *cam, int instancecount)
       std::make_unique<IndexBuffer>(cubeIndices.size() * sizeof(glm::uint32_t));
 
   m_indexBuffer->update(cubeIndices);
+
 }
 
 void Renderer::beginFrame() {
@@ -341,17 +342,21 @@ Renderer::~Renderer() {
 }
 
 void Renderer::addInstance(glm::mat4 model, glm::vec4 colour) {
+
   instances.push_back({model, colour});
-
-  if (instances.size() > m_maxInstanceCount) {
-    m_maxInstanceCount = instances.size();
-    m_instanceBuffer = std::make_unique<InstanceBuffer>(m_maxInstanceCount *
-                                                        sizeof(InstanceData));
-    // the old buffer should be destroyed
-    // TODO: look into a copy command with a command buffer
-
-    m_instanceBuffer->update(instances);
-  }
-
   m_instanceCount++;
+
+  assert(m_instanceCount <= m_maxInstanceCount);
+}
+
+void Renderer::setMaxInstanceCount(int maxInstanceCount) {
+  m_maxInstanceCount = maxInstanceCount;
+  m_instanceBuffer = std::make_unique<InstanceBuffer>(m_maxInstanceCount *
+                                                      sizeof(InstanceData));
+  // the old buffer should be destroyed
+  // TODO: look into a copy command with a command buffer
+  instances.clear();
+  // this may be inneficient TODO: optimisation
+
+  m_instanceCount = 0;
 }

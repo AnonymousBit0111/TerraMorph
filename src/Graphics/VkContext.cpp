@@ -227,3 +227,6 @@ glm::uint32_t VKContext::findMemoryType(uint32_t typeFilter,
   return -1; // code will never reach this point, this is just to make the
              // compiler happy
 }
+
+
+
