@@ -127,11 +127,11 @@ void Application::UIcalls() {
       camera.move(glm::vec3(1, 0, 0));
     }
     if (ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
-      camera.move(glm::vec3(0, 1, 0));
+      camera.move(glm::vec3(0, -1, 0));
     }
 
     if (ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
-      camera.move(glm::vec3(0, -1, 0));
+      camera.move(glm::vec3(0, 1, 0));
     }
   }
 
@@ -169,10 +169,13 @@ void Application::UIcalls() {
   static std::string path = "";
 
   ImGui::InputText("FilePath:", &path);
-  if (ImGui::Button("save")) {
+  if (ImGui::Button("save as csv")) {
+    assert(path != "");
+    SaveCSV(path);
+  }
+  if(ImGui::Button("save as png")){
     assert(path != "");
     Save(path);
-    SaveCSV(path);
   }
   ImGui::End();
 
@@ -306,69 +309,6 @@ void Application::Save(const std::string &filePath) {
   Logging::log(std::to_string(smallestval));
   stbi_write_png(filePath.c_str(), mapSizex, mapSizez, 3, img.data(),
                  mapSizex * 3);
-}
-
-void Application::Load(const std::string &filePath) {
-
-  int width, height, channels;
-  unsigned char *img =
-      stbi_load(filePath.c_str(), &width, &height, &channels, 0);
-
-  if (img == nullptr) {
-    // TODO error handling
-    return;
-  }
-
-  if (width != mapSizex || height != mapSizez || channels != 3) {
-    // TODO error handling
-    stbi_image_free(img);
-    return;
-  }
-
-  std::vector<std::vector<float>> noiseMap;
-
-  noiseMap.resize(mapSizex);
-
-  for (int x = 0; x < mapSizex; x++) {
-    for (int z = 0; z < mapSizez; z++) {
-      noiseMap.push_back(std::vector<float>());
-      noiseMap[x].resize(mapSizez);
-      int index = (x + z * mapSizex) * 3;
-      float y = (static_cast<float>((img[index]) / 255.0f)) * 200.0f;
-      y -= 100.0f;
-      y *= -1;
-
-      noiseMap[x][z] = y;
-    }
-  }
-
-  stbi_image_free(img);
-
-  auto instances = renderer->getInstanceModels();
-
-  int index = 0;
-  for (int x = 0; x < mapSizex; x++) {
-    for (int z = 0; z < mapSizez; z++) {
-
-      glm::mat4 model = glm::translate(glm::mat4(1.0f),
-                                       glm::vec3(x * 2, noiseMap[x][z], z * 2));
-
-      float red = noiseMap[x][z];
-
-      glm::vec4 colour = glm::vec4(1.0f);
-
-      if (red > 0) {
-        colour = glm::vec4(0.0f, 0.0f, red / 200.0f, 1.0f);
-
-      } else {
-        colour = glm::vec4((red * -1) / 200.0f, 0.0f, 0.0f, 1.0f);
-      }
-
-      instances->at(index) = {model, colour};
-
-      index++;
-    }
-  }
 }
 
 void Application::SaveCSV(const std::string &filePath) {

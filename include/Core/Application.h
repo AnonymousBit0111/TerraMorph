@@ -18,7 +18,6 @@ private:
   static void resizeMap();
   static void Save(const std::string &filePath);
   static void SaveCSV(const std::string &filePath);
-  static void Load(const std::string &filePath);
   static void LoadCSV(const std::string &filePath);
 
 public:

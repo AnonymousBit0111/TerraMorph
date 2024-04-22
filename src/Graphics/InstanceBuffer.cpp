@@ -37,10 +37,12 @@ InstanceBuffer::InstanceBuffer(glm::uint32_t size) {
   m_data = g_vkContext->device.mapMemory(m_memory, 0, bufferInfo.size);
 }
 void InstanceBuffer::update(std::vector<InstanceData> &matrices) {
-  assert(matrices.size() * sizeof(matrices[0]) <= m_size);
+    assert(matrices.size() * sizeof(matrices[0]) <= m_size);
   memcpy(m_data, matrices.data(), matrices.size() * sizeof(matrices[0]));
 }
 
+
+// this function doesnt get used??
 void InstanceBuffer::resize(glm::uint32_t size) {
 
   vk::BufferCreateInfo bufferInfo{};

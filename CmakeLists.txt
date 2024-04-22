@@ -9,7 +9,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "./bin")
 # Set compiler flags to ensure memory leaks are easy to find
-
 set(CMAKE_CXX_FLAGS "-g -fsanitize=address,undefined,alignment,bounds,pointer-overflow -fno-omit-frame-pointer -O3")
 
 
@@ -31,7 +30,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 link_directories("lib")
 
-
+# Apple libraries
 find_library(COCOA Cocoa)
 find_library(IOKIT IOKit)
 find_library(METAL Metal)

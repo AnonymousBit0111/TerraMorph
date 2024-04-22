@@ -58,11 +58,14 @@ public:
   void addInstance(glm::mat4 model,glm::vec4 colour);
   void recordCommandBuffer(int imageIndex);
 
+  void setMaxInstanceCount(int maxInstanceCount);
+
   std::vector<InstanceData> *getInstanceModels() {
     return &instances;
   } // so that i can change the models externally
   ~Renderer();
 };
+
 
 } // namespace Graphics
 } // namespace TerraMorph
